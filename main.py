@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 import logging
 from dotenv import load_dotenv
 import os
+import heapq
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -12,16 +14,29 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+announcementsList = []
+heapq.heapify(announcementsList)
+
+#commands
+@bot.tree.command(name="test", description="tester for bot command")
+async def foo(interaction: discord.Interaction, arg: str): 
+    announcementsList.append(arg)  
+    await interaction.response.send_message(f"Hello {arg}!\nI have been lobotomized.")
 
 
 @bot.event
 async def on_ready():
-    print(f"This is a test\nHi! my name is {bot.user.name}")
+    guild = discord.Object(id = 914746562268241950)
+    try:
+        synced = await bot.tree.sync(guild = guild)
+        print(f"synced to the guild!")
+    except Exception as e:
+        print(f"Error synciing commands: {e}")
 
-    channel = bot.get_channel(914746562268241952)
-    if channel:
-        await channel.send("01001000 01101111 01110111 00100000 01100100 01100001 01110010 01100101 00100000 01111001 01101111 01110101 00100000 01101001 01101110 01110011 01110101 01101100 01110100 00100000 01101101 01111001 00100000 01101101 01100101 01100011 01101000 01100001 01101110 01101001 01100011 01100001 01101100 00100000 01101101 01101001 01101110 01100100 00100001 00100000 01001001 00100111 01101100 01101100 00100000 01101000 01100001 01110110 01100101 00100000 01111001 01101111 01110101 00100000 01110100 01101000 01110010 01101111 01110111 01101110 00100000 01101001 01101110 00100000 01110100 01101000 01100101 00100000 01110000 01101001 01110100 01110011 00100000 01101001 01100110 00100000 01111001 01101111 01110101 00100000 01100101 01110110 01100101 01110010 00100000 01110100 01101000 01101001 01101110 01101011 00100000 01101111 01100110 00100000 01100100 01101111 01101001 01101110 01100111 00100000 01110100 01101000 01100001 01110100 00100000 01100001 01100111 01100001 01101001 01101110 00100000 01001101 01010101 01000001 01001000 01000001 01001000 01000001 01001000 01000001 01001000 01000001 01001000 01000001 01001000 01000001 01001000")
+    print(f"This is a test\nHi! my name is {bot.user.name}")
+    print(announcementsList)
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 
