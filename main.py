@@ -5,6 +5,7 @@ import logging
 from dotenv import load_dotenv
 import os
 import heapq
+import json
 
 load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
@@ -15,28 +16,31 @@ intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-announcementsList = []
-heapq.heapify(announcementsList)
+GUILD = discord.Object(id = 914746562268241950)
 
 #commands
-@bot.tree.command(name="test", description="tester for bot command")
+@bot.tree.command(name="test", description="tester for bot command", guild = GUILD)
 async def foo(interaction: discord.Interaction, arg: str): 
-    announcementsList.append(arg)  
     await interaction.response.send_message(f"Hello {arg}!\nI have been lobotomized.")
 
+@bot.tree.command(name="announcement", description="create a scheduled announcment", guild = GUILD)
+async def announcement(interaction: discord.Interaction, role: discord.Role):
+    await interaction.response.send_message(f"Hello, here is an example annoucement {role.mention}")
 
 @bot.event
 async def on_ready():
-    guild = discord.Object(id = 914746562268241950)
+    guild = GUILD
     try:
         synced = await bot.tree.sync(guild = guild)
-        print(f"synced to the guild!")
+        print(f"synced {len(synced)} commands to the guild!")
     except Exception as e:
         print(f"Error synciing commands: {e}")
 
+    
+    
+
     print(f"This is a test\nHi! my name is {bot.user.name}")
-    print(announcementsList)
+
 
 bot.run(token, log_handler=handler, log_level=logging.DEBUG)
 
