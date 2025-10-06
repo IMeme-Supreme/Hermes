@@ -43,29 +43,38 @@ async def foo(interaction: discord.Interaction, arg: str):
 #allow the user to schedule an annoucnemt in the given channel
 @bot.tree.command(name="announcement", description="create a scheduled announcment", guild = GUILD)
 async def announcements(interaction: discord.Interaction, role: discord.Role, message: str, set_date:str = None, set_time:str = None):
-    if(set_date is None and set_time is None):
-        print(f"You just created an unscheduled announcement!")
-    elif(set_date is None and set_time is not None):
-        today = date.today()
-        print(f"#1")
-        time_parse = datetime.strptime(set_time, "%H:%M").time()
-        print(f"#2")
-        combined_datetime = datetime.combine(today, time_parse)
-        print(f"You just created a datetime")
-        newAnnouncement = announcement.announcement(message, role, combined_datetime)
-        print(f"You just created a scheduled announcement with no date!")
-        run_date = datetime.now() + timedelta(seconds=10)
-        scheduler.add_job(message_sent, 'date', run_date = run_date)
-    elif(set_date is not None and set_time is not None):
-        time_parse = datetime.strptime(set_time, "%H:%M").time()
-        date_parse = datetime.strptime(set_date, "%m-%d-%Y").date()
-        combined_datetime = datetime.combine(date_parse, time_parse)
-        newAnnouncement = announcement.announcement(message, role, combined_datetime)
-        print(f"You just created a scheduled announcement with a date and time!")
-        run_date = datetime.now() + timedelta(seconds=10)
-        scheduler.add_job(message_sent, 'date', run_date = run_date)
+    #this how you always ensure a quick reponse
+    await interaction.response.defer(ephemeral=True)
+    try:
+        set_date = set_date.strip() if set_date else None
+        set_time = set_time.strip() if set_time else None
+        if(set_date is None and set_time is None):
+            print(f"You just created an unscheduled announcement!")
+        elif set_date is None and set_time is not None:
+            today = datetime.today()
+            print(f"#1")
+            time_parse = datetime.strptime(set_time, "%H:%M").time()
+            print(f"#2")
+            combined_datetime = datetime.combine(today, time_parse)
+            print(f"You just created a datetime")
+            newAnnouncement = announcement.announcement(message, role, combined_datetime)
+            print(f"You just created a scheduled announcement with no date!")
+            run_date = datetime.now() + timedelta(seconds=10)
+            scheduler.add_job(message_sent, 'date', run_date = run_date)
+        elif set_date and set_time:
+            time_parse = datetime.strptime(set_time, "%H:%M").time()
+            date_parse = datetime.strptime(set_date, "%m-%d-%Y").date()
+            combined_datetime = datetime.combine(date_parse, time_parse)
+            newAnnouncement = announcement.announcement(message, role, combined_datetime)
+            print(f"You just created a scheduled announcement with a date and time!")
+            run_date = datetime.now() + timedelta(seconds=10)
+            scheduler.add_job(message_sent, 'date', run_date = run_date)
+        await interaction.followup.send(f"{message} {role.mention}")
 
-    await interaction.response.send_message(f"{message} {role.mention}")
+    except Exception as e:
+            print(f"ERROR IN ANNOUNCEMENT: {e}")
+            await interaction.followup.send(f"Something entered wrong :C")
+    
 
 #TODO: send announcement at scheduled time
 
