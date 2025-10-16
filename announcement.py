@@ -7,7 +7,7 @@ class announcement(object):
         self.message = message
         self.role = role
         self.myDate = myDate
-        print(f"You just created an announcement object!")
+        
 
     
 #getters
