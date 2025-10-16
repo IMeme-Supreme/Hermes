@@ -34,7 +34,7 @@ async def on_submit(self, interaction: discord.Interaction):
 async def message_sent(channelID, myAnnouncement):
     print(f"Message sent at: {datetime.now().strftime('%H:%M:%S')}")
     channel = bot.get_channel(channelID)
-    await channel.send(f"{myAnnouncement.message} {myAnnouncement.role}")
+    await channel.send(f"{myAnnouncement.message} {myAnnouncement.role.mention}")
 
 #commands
 @bot.tree.command(name="test", description="tester for bot command", guild = GUILD)
@@ -45,12 +45,13 @@ async def foo(interaction: discord.Interaction, arg: str):
 @bot.tree.command(name="announcement", description="create a scheduled announcment", guild = GUILD)
 async def announcements(interaction: discord.Interaction, role: discord.Role, message: str, set_date:str = None, set_time:str = None):
     #this how you always ensure a quick reponse
-    await interaction.response.defer(ephemeral=False)
+
     channel = interaction.channel_id
     try:
         set_date = set_date.strip() if set_date else None
         set_time = set_time.strip() if set_time else None
         if(set_date is None and set_time is None):
+            await interaction.response.defer(ephemeral=False)
             print(f"You just created an unscheduled announcement!")
             await interaction.followup.send(f"{message} {role.mention}")
         elif set_date is None and set_time is not None:
@@ -64,7 +65,8 @@ async def announcements(interaction: discord.Interaction, role: discord.Role, me
             print(f"You just created a scheduled announcement with no date!")
             run_date = datetime.now() + timedelta(seconds=10)
             scheduler.add_job(message_sent, 'date', run_date = run_date)
-            
+
+
         elif set_date and set_time:
             time_parse = datetime.strptime(set_time, "%H:%M").time()
             date_parse = datetime.strptime(set_date, "%m-%d-%Y").date()
@@ -73,6 +75,7 @@ async def announcements(interaction: discord.Interaction, role: discord.Role, me
             print(f"You just created a scheduled announcement with a date and time!")
             run_date = combined_datetime
             scheduler.add_job(func = message_sent, run_date = run_date, args=(channel, newAnnouncement))
+
             
         else:
             await interaction.followup.send(f"YOU SHALL NOT PROVIDE A DATE WITHOUT A TIME!!!!!!!!")
