@@ -45,38 +45,38 @@ async def foo(interaction: discord.Interaction, arg: str):
 @bot.tree.command(name="announcement", description="create a scheduled announcment", guild = GUILD)
 async def announcements(interaction: discord.Interaction, role: discord.Role, message: str, set_date:str = None, set_time:str = None):
     #this how you always ensure a quick reponse
-
+    await interaction.response.defer(ephemeral=True)
     channel = interaction.channel_id
     try:
         set_date = set_date.strip() if set_date else None
         set_time = set_time.strip() if set_time else None
         if(set_date is None and set_time is None):
-            await interaction.response.defer(ephemeral=False)
+            
             print(f"You just created an unscheduled announcement!")
-            await interaction.followup.send(f"{message} {role.mention}")
+            await interaction.followup.send(f"Annoucement made succesfully")
         elif set_date is None and set_time is not None:
             today = datetime.today()
-            print(f"#1")
             time_parse = datetime.strptime(set_time, "%H:%M").time()
-            print(f"#2")
             combined_datetime = datetime.combine(today, time_parse)
-            print(f"You just created a datetime")
+
             newAnnouncement = announcement.announcement(message, role, combined_datetime)
             print(f"You just created a scheduled announcement with no date!")
-            run_date = datetime.now() + timedelta(seconds=10)
-            scheduler.add_job(message_sent, 'date', run_date = run_date)
+
+            scheduler.add_job(func = message_sent, run_date = newAnnouncement.myDate, args=(channel, newAnnouncement))
+            await interaction.followup.send(f"Annoucement made succesfully\nMessage will be send at {newAnnouncement.myDate}")
 
 
         elif set_date and set_time:
             time_parse = datetime.strptime(set_time, "%H:%M").time()
             date_parse = datetime.strptime(set_date, "%m-%d-%Y").date()
             combined_datetime = datetime.combine(date_parse, time_parse)
-            newAnnouncement = announcement.announcement(message, role, combined_datetime)
-            print(f"You just created a scheduled announcement with a date and time!")
-            run_date = combined_datetime
-            scheduler.add_job(func = message_sent, run_date = run_date, args=(channel, newAnnouncement))
 
-            
+            newAnnouncement = announcement.announcement(message, role, combined_datetime)
+
+            print(f"You just created a scheduled announcement with a date and time!")
+   
+            scheduler.add_job(func = message_sent, run_date = newAnnouncement.myDate, args=(channel, newAnnouncement))
+            await interaction.followup.send(f"Annoucement made succesfully\nMessage will be send at {newAnnouncement.myDate}")    
         else:
             await interaction.followup.send(f"YOU SHALL NOT PROVIDE A DATE WITHOUT A TIME!!!!!!!!")
         
@@ -86,7 +86,7 @@ async def announcements(interaction: discord.Interaction, role: discord.Role, me
             await interaction.followup.send(f"Something entered wrong :C")
     
 
-#TODO: send announcement at scheduled time
+
 
 @bot.event
 async def on_ready():
